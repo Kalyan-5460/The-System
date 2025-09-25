@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quest - Solo Leveling</title>
+  <link rel="stylesheet" href="assets/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <script src="assets/js/tsparticles.bundle.min.js"></script>
+  <script src="assets/js/confetti.browser.min.js"></script>
+  <style>
+    /* New Styles for Improved Task Layout */
+    .task-item .task-header {
+      display: block; /* Change from flex to block */
+    }
+    
+    .task-item .task-content {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap; /* Allow badges to wrap on small screens */
+      margin-bottom: 12px; /* Add space below content */
+    }
+
+    .task-item .task-buttons {
+      display: flex;
+      justify-content: flex-end; /* Align buttons to the right */
+      align-items: center;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #444; /* Optional separator */
+    }
+
+    .task-text {
+      flex-grow: 1; /* Allow task text to take available space */
+      margin-right: 10px;
+    }
+
+    .task-btn, .camera-btn-small {
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Level Up Effects -->
+  <div id="tsparticles"></div>
+  <div class="levelup-banner" id="levelupBanner">
+    <div class="slash-effect"></div>
+    <div class="levelup-text">⚔️ LEVEL UP! ⚔️</div>
+    <div class="levelup-subtitle">QUEST MASTER ACHIEVED</div>
+  </div>
+
+  <!-- Hunter Rank Up Effects -->
+  <div class="hunter-rank-banner" id="hunterRankBanner">
+    <div class="hunter-slash-effect"></div>
+    <div class="hunter-rank-text">🏆 HUNTER RANK UP! 🏆</div>
+    <div class="hunter-rank-subtitle" id="hunterRankSubtitle">NEW RANK ACHIEVED</div>
+  </div>
+
+  <!-- Job Promotion Effects -->
+  <div class="job-promotion-banner" id="jobPromotionBanner">
+    <div class="job-slash-effect"></div>
+    <div class="job-promotion-text">⚡ JOB PROMOTION! ⚡</div>
+    <div class="job-promotion-subtitle" id="jobPromotionSubtitle">NEW CLASS UNLOCKED</div>
+  </div>
+
+  <!-- Penalty Effects -->
+  <div class="penalty-banner" id="penaltyBanner">
+    <div class="penalty-slash-effect"></div>
+    <div class="penalty-text">⚠️ PENALTY! ⚠️</div>
+    <div class="penalty-subtitle">QUEST FAILED - STATS REDUCED</div>
+  </div>
+
+  <!-- Hunter Rank Demotion Effects -->
+  <div class="hunter-demotion-banner" id="hunterDemotionBanner">
+    <div class="hunter-demotion-slash-effect"></div>
+    <div class="hunter-demotion-text">⬇️ RANK DEMOTION! ⬇️</div>
+    <div class="hunter-demotion-subtitle" id="hunterDemotionSubtitle">RANK DECREASED</div>
+  </div>
+
+  <!-- Job Demotion Effects -->
+  <div class="job-demotion-banner" id="jobDemotionBanner">
+    <div class="job-demotion-slash-effect"></div>
+    <div class="job-demotion-text">⬇️ JOB DEMOTION! ⬇️</div>
+    <div class="job-demotion-subtitle" id="jobDemotionSubtitle">CLASS DOWNGRADED</div>
+  </div>
+
+  <!-- Countdown Completion Effects -->
+  <div class="countdown-complete-banner" id="countdownCompleteBanner">
+    <div class="countdown-complete-slash-effect"></div>
+    <div class="countdown-complete-text">⏰ COUNTDOWN QUEST COMPLETED! ⏰</div>
+    <div class="countdown-complete-subtitle">BONUS POINT EARNED</div>
+  </div>
+
+  <!-- Profile Icon -->
+  <div class="profile-icon" id="profileIcon" title="View Profile">
+    <div class="knife-container">
+      <div class="knife knife-left"></div>
+      <div class="knife knife-right"></div>
+    </div>
+  </div>
+
+  <!-- Secret Dagger Icon -->
+  <div class="secret-dagger-icon" id="secretDaggerIcon" style="display: none;" title="Double Dungeon">
+    <div class="knife"></div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div id="profileModal" class="modal" style="display: none;">
+    <div class="modal-content profile-modal-content">
+      <div class="profile-status-header">
+        <h2 class="status-title">STATUS</h2>
+        <div class="status-separator"></div>
+      </div>
+      
+      <div class="profile-header">
+        <h2 class="profile-level" id="profileLevel">15</h2>
+        <div class="level-text">LEVEL</div>
+        <div class="level-separator"></div>
+      </div>
+      
+      <div class="hunter-rank-display" id="hunterRankDisplay">
+        E-Rank Hunter (Mortal)
+      </div>
+      
+      <div class="profile-info">
+        <div class="profile-field">
+          <label>JOB:</label>
+          <input type="text" id="playerJob" value="Hunter" maxlength="20" readonly>
+        </div>
+        <div class="profile-field">
+          <label>TITLE:</label>
+          <input type="text" id="playerTitle" value="Sung JinWoo" maxlength="20" readonly>
+        </div>
+        <div id="editTitleModal" class="modal">
+          <div class="modal-content">
+            <h3>Edit Hunter Title</h3>
+            <input type="text" id="editTitleInput" maxlength="23">
+            <div class="modal-buttons">
+              <button id="saveTitleBtn" class="context-menu-btn">OK</button>
+              <button id="cancelTitleBtn" class="context-menu-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-description" id="profileDescription">
+        Low human strength.
+      </div>
+
+     <div class="stats-container">
+        <div class="stat-row">
+          <img src="assets/icons/str-icon.png" class="stat-icon" alt="STR">
+          <span class="stat-label">STR:</span>
+          <span class="stat-value" id="strValue">17</span>
+          <button class="stat-btn" id="strBtn" title="Assign Point">+</button>
+        </div>
+        <div class="stat-row">
+          <img src="assets/icons/int-icon.png" class="stat-icon" alt="INT">
+          <span class="stat-label">INT:</span>
+          <span class="stat-value" id="intValue">11</span>
+          <button class="stat-btn" id="intBtn" title="Assign Point">+</button>
+        </div>
+        <div class="stat-row">
+          <img src="assets/icons/agi-icon.png" class="stat-icon" alt="AGI">
+          <span class="stat-label">AGI:</span>
+          <span class="stat-value" id="agiValue">12</span>
+          <button class="stat-btn" id="agiBtn" title="Assign Point">+</button>
+        </div>
+        <div class="stat-row">
+          <img src="assets/icons/vit-icon.png" class="stat-icon" alt="VIT">
+          <span class="stat-label">VIT:</span>
+          <span class="stat-value" id="vitValue">16</span>
+          <button class="stat-btn" id="vitBtn" title="Assign Point">+</button>
+        </div>
+      </div>
+
+      <div class="available-points" id="availablePoints">
+        <div class="points-container">
+          <i class="fas fa-bolt charge-icon"></i>
+          <span id="pointsCount">0</span>
+          <span class="points-text">POINTS AVAILABLE</span>
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button id="closeProfileBtn" class="btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secret Dungeon Modal -->
+  <div id="secretDungeonModal" class="modal" style="display: none;">
+    <div class="modal-content secret-dungeon-content">
+      <div class="secret-dungeon-header">
+        <h2 class="secret-dungeon-title">Welcome to Double Dungeon</h2>
+      </div>
+      
+      <div class="secret-dungeon-buttons">
+        <button id="notesBtn" class="notes-btn">Notes</button>
+        <button id="taskDataBtn" class="notes-btn">Task Data</button>
+        <button id="closeSecretBtn" class="btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Data Modal -->
+  <div id="taskDataModal" class="modal" style="display: none;">
+    <div class="modal-content task-data-modal-content">
+      <div class="task-data-header">
+        <h2 class="task-data-title">Task Data Archive</h2>
+        <button class="close-task-data" id="closeTaskDataBtn">&times;</button>
+      </div>
+      
+      <div class="task-data-buttons">
+        <button id="completedTasksBtn" class="task-data-btn">Completed Tasks</button>
+        <button id="uncompletedTasksBtn" class="task-data-btn">Uncompleted Tasks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Completed Tasks Modal -->
+  <div id="completedTasksModal" class="modal" style="display: none;">
+    <div class="modal-content task-table-modal-content">
+      <div class="task-table-header">
+        <h2 class="task-table-title">Completed Tasks Archive</h2>
+        <button class="close-task-table" id="closeCompletedTasksBtn">&times;</button>
+      </div>
+      
+      <div class="task-table-actions" id="completedTasksActions" style="display: none;">
+        <button id="addAllCompletedBtn" class="task-table-action-btn add-all-btn">Add All Selected</button>
+        <button id="removeAllCompletedBtn" class="task-table-action-btn remove-all-btn">Remove All Selected</button>
+        <button id="addRemoveAllCompletedBtn" class="task-table-action-btn add-remove-all-btn">Add & Remove All Selected</button>
+        <button id="selectAllCompletedBtn" class="task-table-action-btn select-all-btn">Select/Unselect All</button>
+        <button id="cancelCompletedSelectionBtn" class="task-table-action-btn cancel-btn">Cancel</button>
+      </div>
+      
+      <div class="task-table-container">
+        <table class="task-table" id="completedTasksTable">
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Task Name</th>
+              <th>Created Date & Time</th>
+              <th>Completed Date & Time</th>
+              <th>Type</th>
+              <th>Measurement</th>
+              <th>24 HR</th>
+              <th>Required</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="completedTasksTableBody">
+            <!-- Completed tasks will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Uncompleted Tasks Modal -->
+  <div id="uncompletedTasksModal" class="modal" style="display: none;">
+    <div class="modal-content task-table-modal-content">
+      <div class="task-table-header">
+        <h2 class="task-table-title">Uncompleted Tasks Archive</h2>
+        <button class="close-task-table" id="closeUncompletedTasksBtn">&times;</button>
+      </div>
+      
+      <div class="task-table-actions" id="uncompletedTasksActions" style="display: none;">
+        <button id="addAllUncompletedBtn" class="task-table-action-btn add-all-btn">Add All Selected</button>
+        <button id="removeAllUncompletedBtn" class="task-table-action-btn remove-all-btn">Remove All Selected</button>
+        <button id="addRemoveAllUncompletedBtn" class="task-table-action-btn add-remove-all-btn">Add & Remove All Selected</button>
+        <button id="selectAllUncompletedBtn" class="task-table-action-btn select-all-btn">Select/Unselect All</button>
+        <button id="cancelUncompletedSelectionBtn" class="task-table-action-btn cancel-btn">Cancel</button>
+      </div>
+      
+      <div class="task-table-container">
+        <table class="task-table" id="uncompletedTasksTable">
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Task Name</th>
+              <th>Created Date & Time</th>
+              <th>Uncompleted Date & Time</th>
+              <th>Type</th>
+              <th>Measurement</th>
+              <th>24 HR</th>
+              <th>Required</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="uncompletedTasksTableBody">
+            <!-- Uncompleted tasks will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes Modal -->
+  <div id="notesModal" class="modal" style="display: none;">
+    <div class="modal-content notes-modal-content">
+      <div class="notes-header">
+        <h2 class="notes-title">Shadow Notes</h2>
+        <button class="close-notes" id="closeNotesBtn">&times;</button>
+      </div>
+      
+      <textarea id="notesTextarea" class="notes-textarea" placeholder="Write your secret notes here..."></textarea>
+      
+      <div class="notes-buttons">
+        <button id="saveNotesBtn" class="save-notes-btn">Save Notes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Task Modal -->
+  <div id="editTaskModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3>Edit Quest</h3>
+      <div class="edit-task-group">
+        <input type="text" id="editTaskInput" placeholder="Enter new quest name..." />
+      </div>
+      
+      <!-- Target Value Input for editing (for time/count tasks) -->
+      <div class="edit-target-container" id="editTargetContainer" style="display: none;">
+        <div class="target-input-group">
+          <input type="number" id="editTargetValue" placeholder="Target" min="1" />
+          <select id="editTimeUnit" style="display: none;">
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Countdown Time Input for editing -->
+      <div class="edit-countdown-container" id="editCountdownContainer" style="display: none;">
+        <div class="countdown-input-group">
+          <div class="time-input-section">
+            <label>Hours:</label>
+            <input type="number" id="editCountdownHours" placeholder="0" min="0" max="23" />
+          </div>
+          <div class="time-input-section">
+            <label>Minutes:</label>
+            <input type="number" id="editCountdownMinutes" placeholder="0" min="0" max="59" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 24 HR Checkbox for editing -->
+      <div class="edit-checkbox-container" id="editCheckboxContainer">
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="edit24HrCheckbox" checked>
+            <span class="checkbox-text">24 HR</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="editRequiredCheckbox" checked>
+            <span class="checkbox-text">Required</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="modal-buttons">
+        <button id="saveEditBtn" class="btn-primary">Save</button>
+        <button id="cancelEditBtn" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selection Actions Bar -->
+  <div id="selectionActionsBar" class="selection-actions-bar" style="display: none;">
+    <div class="selection-info">
+      <span id="selectedCount">0</span> selected
+    </div>
+    <div class="selection-actions">
+      <button id="markSelectedBtn" class="action-btn mark-btn">
+        <i class="fas fa-check"></i> Mark Done
+      </button>
+      <button id="unmarkSelectedBtn" class="action-btn unmark-btn">
+        <i class="fas fa-undo"></i> Unmark
+      </button>
+      <button id="exceptionSelectedBtn" class="action-btn exception-btn">
+        <i class="fas fa-pause"></i> Exception
+      </button>
+      <button id="unexceptionSelectedBtn" class="action-btn unexception-btn">
+        <i class="fas fa-play"></i> Unexception
+      </button>
+      <button id="deleteSelectedBtn" class="action-btn delete-btn">
+        <i class="fas fa-trash"></i> Delete
+      </button>
+      <button id="selectAllTasksBtn" class="action-btn select-all-btn">
+        <i class="fas fa-check-double"></i> Select/Unselect All
+      </button>
+      <button id="cancelSelectionBtn" class="action-btn cancel-btn">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="todo-app">
+      <h1 class="main-title">🗡️ DAILY QUEST</h1>
+      <h2 class="goal-title">🎯 TRAIN TO BECOME A COMPACT</h2>
+      
+      <!-- Current Date and Time Display -->
+      <div class="current-datetime" id="currentDateTime">
+        📅 Loading...
+      </div>
+
+      <!-- Overall Progress -->
+      <div class="stat-container">
+        <div class="progressbar">
+          <div class="progress" id="overall-progress"></div>
+        </div>
+        <div class="stat-numbers" id="progress-numbers">0/0 Completed</div>
+      </div>
+
+      <!-- Task Input Form -->
+      <form class="input-area" id="task-form">
+        <input type="text" class="task-input" id="task-input" placeholder="Enter new quest..." required autocomplete="off" />
+        <button type="submit" id="add-task-btn"><i class="fa-solid fa-plus"></i></button>
+      </form>
+
+      <!-- Task Type Selection -->
+      <div class="task-type-selector">
+        <select id="task-type-select" class="type-select">
+          <option value="regular">Regular</option>
+          <option value="time">Time</option>
+          <option value="count">Count</option>
+          <option value="countdown">Countdown</option>
+        </select>
+      </div>
+
+      <!-- Target Value Input (for time/count tasks) -->
+      <div class="target-input-container" id="target-container" style="display: none;">
+        <div class="target-input-group">
+          <input type="number" id="target-value" placeholder="Target" min="1" />
+          <select id="time-unit" style="display: none;">
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Countdown Time Input -->
+      <div class="countdown-input-container" id="countdown-container" style="display: none;">
+        <div class="countdown-input-group">
+          <div class="time-input-section">
+            <label>Hours:</label>
+            <input type="number" id="countdown-hours" placeholder="0" min="0" max="23" />
+          </div>
+          <div class="time-input-section">
+            <label>Minutes:</label>
+            <input type="number" id="countdown-minutes" placeholder="0" min="0" max="59" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkbox Options -->
+      <div class="checkbox-container" id="checkbox-container">
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="daily24HrCheckbox" checked>
+            <span class="checkbox-text">24 HR</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="requiredCheckbox" checked>
+            <span class="checkbox-text">Required</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Task List -->
+      <div class="todo-container">
+        <ul class="task-list" id="task-list"></ul>
+      </div>
+
+      <div id="empty-state" class="empty-state" style="display: none;">
+        <p>No quests yet. Add your first quest above!</p>
+      </div>
+
+      <p class="warning">⚠️ CAUTION - NOT COMPLETING TASK WILL RESULT IN PENALTY</p>
+    </div>
+  </div>
+
+  <!-- Progress Update Modal -->
+  <div id="progress-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3>Update Progress</h3>
+      <div class="progress-input-group">
+        <input type="number" id="progress-input" placeholder="Enter progress" min="0" />
+        <select id="progress-unit" style="display: none;">
+          <option value="minutes">Minutes</option>
+          <option value="hours">Hours</option>
+        </select>
+        <span id="progress-unit-text"></span>
+      </div>
+      <div class="modal-buttons">
+        <button id="update-progress-btn" class="btn-primary">Update</button>
+        <button id="cancel-progress-btn" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Long Press Context Menu -->
+  <div id="contextMenu" class="context-menu" style="display: none;">
+    <div class="context-item" id="contextEdit">
+      <i class="fas fa-edit"></i> Edit Quest
+    </div>
+    <div class="context-item" id="contextSelect">
+      <i class="fas fa-check-square"></i> Select Quest
+    </div>
+  </div>
+
+<!-- Camera Detection Modal -->
+<div id="cameraModal" class="modal" style="display: none;">
+    <div class="modal-content camera-modal-content">
+        <div class="camera-header">
+            <h2 class="camera-title">🦾 Shadow Training - Pose Detection</h2>
+            <button class="close-camera" id="closeCameraBtn">&times;</button>
+        </div>
+        
+       <div class="camera-container">
+            <video id="cameraFeed" autoplay playsinline muted></video>
+            <canvas id="poseCanvas"></canvas>
+            <div id="detectionStatus">Ready - Click Start Detection</div>
+        </div>
+                
+        <div class="camera-controls">
+            <button id="startDetection" class="camera-btn start-btn">
+                <i class="fas fa-play"></i> Start Detection
+            </button>
+            <button id="stopDetection" class="camera-btn stop-btn" disabled>
+                <i class="fas fa-stop"></i> Stop Detection
+            </button>
+            <button id="saveCameraResults" class="camera-btn save-btn" disabled>
+                <i class="fas fa-save"></i> Save Progress
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add MediaPipe and TensorFlow scripts before closing body -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+  <script src="assets/js/tfjs.js"></script>
+  <script src="pose-detection/camera-manager.js"></script>
+  <script src="pose-detection/pose-detector.js"></script> 
+  <script src="profile.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
+
